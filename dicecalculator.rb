@@ -21,7 +21,7 @@ challenge_num   = dice_string.count 'C'
 #Create the number of possibilities. (sides on die)^(# of dice)
 possibilities_max = 6**(boost_num+setback_num) * 8**(ability_num+difficulty_num) * 12**(proficiency_num+challenge_num)
 
-#calculate the maximum range of success/failure & advantage/threat. Most die have a side with 2 of each symbol, except advantage and setback die. (Failures will be counted at -1, -2, indecies.) t(R)iumph and (D)espair are only counted for their successes.
+#calculate the maximum range of success/failure & advantage/threat. Most die have a side with 2 of each symbol, except advantage and setback die. (Failures/Threats will be counted at negative indecies. Look up Ruby's use of negative indicies, boyo. It's pretty rad.) t(R)iumph and (D)espair are only counted for their successes.
 success_max = boost_num + 2*(ability_num + proficiency_num)
 advantage_max =  2*(boost_num + ability_num + proficiency_num)
 
