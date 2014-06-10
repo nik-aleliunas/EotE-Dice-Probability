@@ -9,13 +9,13 @@ ability = [ nil, 'S', 'S', 'SS', 'A', 'A', 'SA', 'AA']
 difficulty = [ nil, 'F', 'FF', 'T', 'T', 'T', 'TT', 'FT']
 proficiency = [ nil, 'S', 'S', 'SS', 'SS', 'A', 'SA', 'SA', 'SA', 'AA', 'AA', 'SR']
 challenge = [ nil, 'F', 'F', 'FF', 'FF', 'T', 'T', 'FT', 'FT', 'TT', 'TT', 'FD']
-simplified = false #Simplified output true or false
-combinations = false
-dice_string = nil
-target_toggle = false
-target_string = nil
-target_success = 0
-target_advantage = 0
+simplified = false #Simplified output toggle
+combinations = false #Show all dice combinations Toggle
+dice_string = nil #Input String of dice pool. Should consist of BSADPC's.
+target_toggle = false #Target probability computation toggle
+target_string = nil #Target input string. Should be made of S & A's.
+target_success = 0 #Numerical representation of Target String's Successes
+target_advantage = 0 #Numberical representation of Target String's Advantages
 
 while(ARGV.length > 0)
     if (ARGV[0][0] == '-')
@@ -95,7 +95,7 @@ proficiency_num.times do die_grid << proficiency end
 challenge_num.times   do die_grid << challenge   end
 
 
-#iterate through all possible combonations of dice in grid, add them to the result grid
+#iterate through all possible combinations of dice in grid, add them to the result grid
 die_grid.shift.product(*die_grid) do |combi|
     combi = combi.join
     if (combinations == true) then p combi end
@@ -104,10 +104,10 @@ die_grid.shift.product(*die_grid) do |combi|
     result_grid[success_count][advantage_count] +=1
 end
 
-#create percentile pools for success rate, advantage rate and threat rate
-die_pool_success = 0.0
-die_pool_advantage = 0.0
-die_pool_threat = 0.0
+#create percentile pools for success rate, advantage rate, threat rate and target rate
+success_probability = 0.0
+advantage_probability = 0.0
+threat_probability = 0.0
 target_probability = 0.0
 puts "\n++++RESULTS for Dice Pool: #{dice_string}++++\n"
 if(simplified == false) then puts "------------" end
@@ -121,9 +121,9 @@ for i in 0..success_max
             result_grid[i][j] = (result_grid[i][j]/possibilities_max)*100
             
             #if there is success, then add this percent to the growing success die percentage.
-            if(i != 0) then die_pool_success += result_grid[i][j] end
+            if(i != 0) then success_probability += result_grid[i][j] end
             #likewise for advantage
-            if(j != 0) then die_pool_advantage += result_grid[i][j] end
+            if(j != 0) then advantage_probability += result_grid[i][j] end
             if(target_toggle ==true && i >= target_success && j >=target_advantage) then target_probability +=result_grid[i][j] end
             #print the result
             if(simplified == false) then puts "#{i} Success & #{j} Advantage: #{result_grid[i][j].round(2)}%" end
@@ -133,9 +133,9 @@ for i in 0..success_max
     for j in (advantage_max+threat_max).downto(advantage_max+1)
         if (result_grid[i][j] != 0)
             result_grid[i][j] = (result_grid[i][j]/possibilities_max)*100
-            if(i != 0) then die_pool_success += result_grid[i][j] end
+            if(i != 0) then success_probability += result_grid[i][j] end
             #see Success and Advantage
-            if(j != 0) then die_pool_threat += result_grid[i][j] end
+            if(j != 0) then threat_probability += result_grid[i][j] end
             if(simplified == false) then puts "#{i} Success & #{threat_max +advantage_max + 1 - j} Threat: #{result_grid[i][j].round(2)}%" end
         end
     end
@@ -149,7 +149,7 @@ for i in (success_max + failure_max).downto(success_max+1)
         if (result_grid[i][j] != 0)
             result_grid[i][j] = (result_grid[i][j]/possibilities_max)*100
             #See Success and Advantage
-            if(j != 0) then die_pool_advantage += result_grid[i][j] end
+            if(j != 0) then advantage_probability += result_grid[i][j] end
             if(simplified == false) then puts "#{((success_max + failure_max + 1) - i)} Failure & #{j} Advantage: #{result_grid[i][j].round(2)}%" end
         end
     end
@@ -157,15 +157,15 @@ for i in (success_max + failure_max).downto(success_max+1)
     for j in (advantage_max+threat_max).downto(advantage_max+1)
         if (result_grid[i][j] != 0)
             result_grid[i][j] = (result_grid[i][j]/possibilities_max)*100
-            if(j != 0) then die_pool_threat += result_grid[i][j] end
+            if(j != 0) then threat_probability += result_grid[i][j] end
             if(simplified == false) then puts "#{(failure_max + success_max + 1) - i} Failure & #{threat_max +advantage_max + 1 - j} Threat: #{result_grid[i][j].round(2)}%" end
         end
     end
     if(simplified == false) then puts"------------" end
 end
 
-puts "Total Chance of Success: #{die_pool_success}"
-puts "Total Chance of Advantage: #{die_pool_advantage}"
-puts "Total Chance of Threat: #{die_pool_threat}"
+puts "Total Chance of Success: #{success_probability}"
+puts "Total Chance of Advantage: #{advantage_probability}"
+puts "Total Chance of Threat: #{threat_probability}"
 if(target_toggle == true) then puts "Total Chance of Reaching Target (#{target_string}): #{target_probability}" end
 puts"+++++++++++++++"
