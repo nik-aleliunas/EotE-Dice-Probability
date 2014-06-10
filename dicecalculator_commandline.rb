@@ -128,8 +128,7 @@ for i in (success_max + failure_max).downto(success_max+1)
      if(simplified == false) then puts"------------" end
 end
 
-if(simplified == false) then puts"+++++++++++++++" end
-
 puts "Total Chance of Success: #{die_pool_success}"
 puts "Total Chance of Advantage: #{die_pool_advantage}"
 puts "Total Chance of Threat: #{die_pool_threat}"
+puts"+++++++++++++++"
