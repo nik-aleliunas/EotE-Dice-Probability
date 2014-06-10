@@ -45,7 +45,7 @@ challenge_num   = dice_string.count 'C'
 #Create the number of possibilities. (sides on die)^(# of dice)
 possibilities_max = 6**(boost_num+setback_num) * 8**(ability_num+difficulty_num) * 12**(proficiency_num+challenge_num)
 
-if (possibilities_max >= 0)
+if (possibilities_max <= 1)
     p "No Dice."
     exit
 end
