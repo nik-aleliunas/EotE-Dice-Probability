@@ -73,7 +73,7 @@ die_pool_success = 0.0
 die_pool_advantage = 0.0
 die_pool_threat = 0.0
 puts "\n++++RESULTS++++\n"
-if simplified == false then puts '------------' end
+puts '------------' if simplified == false
 # Success
 for i in 0..success_max
     # Advantage
@@ -84,24 +84,24 @@ for i in 0..success_max
       result_grid[i][j] = (result_grid[i][j] / possibilities_max) * 100
 
         # if there is success, then add this percent to the growing success die percentage.
-      if i != 0 then die_pool_success += result_grid[i][j] end
+      die_pool_success += result_grid[i][j] if i != 0
         # likewise for advantage
-      if j != 0 then die_pool_advantage += result_grid[i][j] end
+      die_pool_advantage += result_grid[i][j] if j != 0
         # print the result
-      if simplified == false then puts "#{i} Success & #{j} Advantage: #{result_grid[i][j].round(2)}%" end
+      puts "#{i} Success & #{j} Advantage: #{result_grid[i][j].round(2)}%" if simplified == false
     end
   end
     # Threat
   for j in (advantage_max + threat_max).downto(advantage_max + 1)
     if result_grid[i][j] != 0
       result_grid[i][j] = (result_grid[i][j] / possibilities_max) * 100
-      if i != 0 then die_pool_success += 1 end
+      die_pool_success += result_grid[i][j] if i != 0
         # see Success and Advantage
-      if j != 0 then die_pool_threat += result_grid[i][j] end
-      if simplified == false then puts "#{i} Success & #{threat_max + advantage_max + 1 - j} Threat: #{result_grid[i][j].round(2)}%" end
+      die_pool_threat += result_grid[i][j] if j != 0
+      puts "#{i} Success & #{threat_max + advantage_max + 1 - j} Threat: #{result_grid[i][j].round(2)}%" if simplified == false
     end
   end
-  if simplified == false then puts'------------' end
+  puts '------------' if simplified == false
 end
 
 # Failure
@@ -111,22 +111,22 @@ for i in (success_max + failure_max).downto(success_max + 1)
     if result_grid[i][j] != 0
       result_grid[i][j] = (result_grid[i][j] / possibilities_max) * 100
         # See Success and Advantage
-      if j != 0 then die_pool_advantage += result_grid[i][j] end
-      if simplified == false then puts "#{((success_max + failure_max + 1) - i)} Failure & #{j} Advantage: #{result_grid[i][j].round(2)}%" end
+      die_pool_advantage += result_grid[i][j] if j != 0
+      puts "#{((success_max + failure_max + 1) - i)} Failure & #{j} Advantage: #{result_grid[i][j].round(2)}%" if simplified == false
     end
   end
     # Threat
   for j in (advantage_max + threat_max).downto(advantage_max + 1)
     if result_grid[i][j] != 0
       result_grid[i][j] = (result_grid[i][j] / possibilities_max) * 100
-      if j != 0 then die_pool_threat += result_grid[i][j] end
-      if simplified == false then puts "#{(failure_max + success_max + 1) - i} Failure & #{threat_max + advantage_max + 1 - j} Threat: #{result_grid[i][j].round(2)}%" end
+      die_pool_threat += result_grid[i][j] if j != 0
+      puts "#{(failure_max + success_max + 1) - i} Failure & #{threat_max + advantage_max + 1 - j} Threat: #{result_grid[i][j].round(2)}%" if simplified == false
     end
   end
-  if simplified == false then puts'------------' end
+  puts '------------' if simplified == false
 end
 
 puts "Total Chance of Success: #{die_pool_success}"
 puts "Total Chance of Advantage: #{die_pool_advantage}"
 puts "Total Chance of Threat: #{die_pool_threat}"
-puts'+++++++++++++++'
+puts '+++++++++++++++'
