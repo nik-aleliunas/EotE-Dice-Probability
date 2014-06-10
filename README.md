@@ -3,7 +3,7 @@ EotE-Dice-Probability
 
 A probability generator for the dice of Fantasy Flight's RPG Edge of the Empire
 
-To use this tool, you can input a series of dice at command line, or, if left empty, when prompted. 
+To use this tool, you can input a series of dice at command line, or, if left empty, when prompted during run time. 
 The Dice are as follows:
 
 (B)oost
@@ -26,6 +26,4 @@ Command line Arguments:
 
 -C : Combination. Shows every single combination of the dice pool, one combination per line. (Hint: at 2 dice, this is 36+ lines. Be warned.)
 
-TODO:
-
--T:[S,A] : Target. Input the amount of success and advantage you want to hit, and the program will tell you the probability of getting higher than that.
+-T:[S,A] : Target. Input the amount of success and advantage you want to hit, and the program will tell you the probability of getting higher than that. If the area after -T is left blank, you may input your target during run time.
