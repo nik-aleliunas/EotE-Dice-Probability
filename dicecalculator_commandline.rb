@@ -12,6 +12,10 @@ challenge = [ nil, 'F', 'F', 'FF', 'FF', 'T', 'T', 'FT', 'FT', 'TT', 'TT', 'FD']
 simplified = false #Simplified output true or false
 combinations = false
 dice_string = nil
+target_toggle = false
+target_string = nil
+target_success = 0
+target_advantage = 0
 
 while(ARGV.length > 0)
     if (ARGV[0][0] == '-')
@@ -21,18 +25,34 @@ while(ARGV.length > 0)
         elsif(ARGV[0][1] == 'C')
             combinations = true
             ARGV.shift
+        elsif(ARGV[0][1] == 'T')
+            target_string = ARGV.shift
+            target_string = target_string[3..-1]
+            p target_string
+            target_toggle = true
         end
     else
-        dice_string = ARGV.shift
+        dice_string = ARGV.shift.upcase
     end
 end
 
 if(dice_string == nil)
     puts "Dice Pool: (Use the first letter to signify a die: B,S,A,D,P or C.)"
     STDOUT.flush
-    dice_string = gets.chomp
+    dice_string = gets.chomp.upcase
 end
 
+
+if(target_toggle == true && (target_string == nil || target_string == ""))
+    puts "Target Success/Advantage: (Use S or A to signify one Success or Advantage.)"
+    STDOUT.flush
+    target_string = gets.chomp.upcase
+end
+
+if (target_toggle == true)
+  target_success   = target_string.count 'S'
+  target_advantage = target_string.count 'A'
+end
 
 #count the number of each type of die input
 boost_num       = dice_string.count 'B'
@@ -88,6 +108,7 @@ end
 die_pool_success = 0.0
 die_pool_advantage = 0.0
 die_pool_threat = 0.0
+target_probability = 0.0
 puts "\n++++RESULTS for Dice Pool: #{dice_string}++++\n"
 if(simplified == false) then puts "------------" end
 #Success
@@ -103,6 +124,7 @@ for i in 0..success_max
             if(i != 0) then die_pool_success += result_grid[i][j] end
             #likewise for advantage
             if(j != 0) then die_pool_advantage += result_grid[i][j] end
+            if(target_toggle ==true && i >= target_success && j >=target_advantage) then target_probability +=result_grid[i][j] end
             #print the result
             if(simplified == false) then puts "#{i} Success & #{j} Advantage: #{result_grid[i][j].round(2)}%" end
         end
@@ -145,4 +167,5 @@ end
 puts "Total Chance of Success: #{die_pool_success}"
 puts "Total Chance of Advantage: #{die_pool_advantage}"
 puts "Total Chance of Threat: #{die_pool_threat}"
+if(target_toggle == true) then puts "Total Chance of Reaching Target (#{target_string}): #{target_probability}" end
 puts"+++++++++++++++"
