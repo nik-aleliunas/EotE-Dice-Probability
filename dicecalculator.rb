@@ -86,7 +86,7 @@ for i in 0..success_max
       puts "#{i} Success & #{threat_max + advantage_max + 1 - j} Threat: #{result_grid[i][j].round(2)}%"
     end
   end
-  puts'------------'
+  puts '------------'
 end
 
 # Failure
@@ -108,10 +108,10 @@ for i in (success_max + failure_max).downto(success_max + 1)
       puts "#{(failure_max + success_max + 1) - i} Failure & #{threat_max + advantage_max + 1 - j} Threat: #{result_grid[i][j].round(2)}%"
     end
   end
-  puts'------------'
+  puts '------------'
 end
 
-puts'+++++++++++++++'
+puts '+++++++++++++++'
 
 puts "Total Chance of Success: #{die_pool_success}"
 puts "Total Chance of Advantage: #{die_pool_advantage}"
