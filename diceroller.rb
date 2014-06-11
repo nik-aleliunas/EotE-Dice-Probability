@@ -10,11 +10,8 @@ ability =     [nil, 'S', 'S',  'SS', 'A',  'A', 'SA', 'AA']
 difficulty =  [nil, 'F', 'FF', 'T',  'T',  'T', 'TT', 'FT']
 proficiency = [nil, 'S', 'S',  'SS', 'SS', 'A', 'SA', 'SA', 'SA', 'AA', 'AA', 'SR']
 challenge =   [nil, 'F', 'F',  'FF', 'FF', 'T', 'T',  'FT', 'FT', 'TT', 'TT', 'FD']
-dice_string = nil # Input String of dice pool. Should consist of BSADPC's.
 
-while ARGV.length > 0
-  dice_string = ARGV.shift.upcase
-end
+dice_string = ARGV.shift.upcase while ARGV.length > 0
 
 if dice_string.nil?
   puts 'Dice Pool: (Use the first letter to signify a die: B,S,A,D,P or C.)'
