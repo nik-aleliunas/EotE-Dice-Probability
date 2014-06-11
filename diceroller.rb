@@ -4,12 +4,12 @@
 
 # Dice symbol key:
 # (S)uccess, (A)dvantage, (F)ailure), (T)hreat, t(R)iumph, (D)espair
-boost = [nil, nil, 'S', 'SA', 'AA', 'A']
-setback = [nil, nil, 'F', 'F', 'T', 'T']
-ability = [nil, 'S', 'S', 'SS', 'A', 'A', 'SA', 'AA']
-difficulty = [nil, 'F', 'FF', 'T', 'T', 'T', 'TT', 'FT']
-proficiency = [nil, 'S', 'S', 'SS', 'SS', 'A', 'SA', 'SA', 'SA', 'AA', 'AA', 'SR']
-challenge = [nil, 'F', 'F', 'FF', 'FF', 'T', 'T', 'FT', 'FT', 'TT', 'TT', 'FD']
+boost =       [nil, nil, 'S',  'SA', 'AA', 'A']
+setback =     [nil, nil, 'F',  'F',  'T',  'T']
+ability =     [nil, 'S', 'S',  'SS', 'A',  'A', 'SA', 'AA']
+difficulty =  [nil, 'F', 'FF', 'T',  'T',  'T', 'TT', 'FT']
+proficiency = [nil, 'S', 'S',  'SS', 'SS', 'A', 'SA', 'SA', 'SA', 'AA', 'AA', 'SR']
+challenge =   [nil, 'F', 'F',  'FF', 'FF', 'T', 'T',  'FT', 'FT', 'TT', 'TT', 'FD']
 dice_string = nil # Input String of dice pool. Should consist of BSADPC's.
 
 while ARGV.length > 0
@@ -31,6 +31,9 @@ difficulty_num  = dice_string.count 'D'
 proficiency_num = dice_string.count 'P'
 challenge_num   = dice_string.count 'C'
 
+dice_string = 'P' * proficiency_num + 'A' * ability_num + \
+'C' * challenge_num + 'D' * difficulty_num + \
+'B' * boost_num + 'S' * setback_num
 # Create the number of possibilities. (sides on die)^(# of dice)
 possibilities_max = 6**(boost_num + setback_num) * 8**(ability_num + difficulty_num) * 12**(proficiency_num + challenge_num)
 
