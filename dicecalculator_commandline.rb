@@ -111,8 +111,7 @@ end
 
 # create percentile pools for
 # success rate, advantage rate, threat rate and target rate
-success_probability, advantage_probability, threat_probability, \
-target_probability = 0.0, 0.0, 0.0, 0.0
+success_probability, advantage_probability, threat_probability, failure_symbol_probability, target_probability = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 puts "\n++++RESULTS for Dice Pool: #{dice_string}++++\n"
 puts '------------' if ( simplified == false)
 # Success
@@ -151,23 +150,25 @@ end
 
 # Failure
 result_grid.reverse[0..failure_max - 1].each_with_index do |result_line, i|
-  break if (failure_max == 0)
+  break if failure_max == 0
   # Advantage
   result_line[0..advantage_max].each_with_index do |result_cell, j|
     if (result_cell != 0)
       result_cell /= (possibilities_max * 0.01)
       # See Success and Advantage
       advantage_probability += (j != 0) ? result_cell : 0
+      failure_symbol_probability += result_cell
       puts "#{i + 1} Failure & #{j} Advantage: #{result_cell.round(2)}%" \
       if simplified == false
     end
   end
   # Threat
   result_line.reverse[0..threat_max - 1].each_with_index do |result_cell, j|
-    break if (threat_max == 0)
+    break if threat_max == 0
     if (result_cell != 0)
       result_cell /= (possibilities_max * 0.01)
       threat_probability += result_cell
+      failure_symbol_probability += result_cell
       puts "#{i + 1} Failure & #{j + 1} Threat: #{result_cell.round(2)}%" \
       if simplified == false
     end
@@ -178,5 +179,6 @@ end
 puts "Total Chance of Success: #{success_probability}"
 puts "Total Chance of Advantage: #{advantage_probability}"
 puts "Total Chance of Threat: #{threat_probability}"
+puts "Total Chance of a seeing a Failure Symbol: #{failure_symbol_probability}"
 puts "Total Chance of Reaching Target (#{target_string}): #{target_probability}" if target_toggle == true
 puts '+++++++++++++++'
