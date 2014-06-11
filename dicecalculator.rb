@@ -149,16 +149,12 @@ dice_string.each_char do |die|
   
   temp_die_grid.each { |x| x.collect! { |n| n / possibilities } }
   
-  p success_temp
-  p advantage_temp
   result_grid_temporary = /[BAP]/ === die ? \
   Array.new(success_temp) { Array.new(advantage_temp, 0.0) } : \
   Array.new(failure_temp) { Array.new(threat_temp,    0.0) }
   
   case die
   when /[BAP]/
-    p good_grid.inspect
-    p temp_die_grid.inspect
     good_grid.each_with_index do |grid_line, i|
       grid_line.each_with_index do |grid_cell, j|
         temp_die_grid.each_with_index do |temp_die_line, k|
@@ -182,9 +178,6 @@ dice_string.each_char do |die|
     bad_grid = result_grid_temporary
   end
 end
-
-p good_grid.inspect
-p bad_grid.inspect
 
 good_grid.each_with_index do |good_line, i|
     good_line.each_with_index do |good_cell, j|
@@ -219,6 +212,20 @@ end
 #end
 #
 # End Legacy Code.
+
+if combinations == true then
+  die_grid = []
+  #populate die grid with the input dice
+  boost_num.times     { die_grid << boost     }
+  setback_num.times   { die_grid << setback   }
+  ability_num.times   { die_grid << ability   }
+  difficulty_num.times  { die_grid << difficulty  }
+  proficiency_num.times { die_grid << proficiency }
+  challenge_num.times   { die_grid << challenge   }
+  
+  die_grid.shift.product(*die_grid) { |combi| p combi }
+end
+
 
 result_grid.each { |x| x.collect! { |n| n * 100 } }
 # create percentile pools for
