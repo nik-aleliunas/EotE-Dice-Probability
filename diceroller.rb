@@ -63,5 +63,5 @@ p "+++ Results of Roll: #{dice_string} +++"
 puts roll_success >= 0 ? "Success: #{roll_success}".center(25 + dice_string.length) : "Failure: #{roll_success.abs}".center(25 + dice_string.length)
 puts roll_advantage >= 0 ? "Advantage: #{roll_advantage}".center(25 + dice_string.length) : "Threat: #{roll_advantage.abs}".center(25 + dice_string.length)
 puts "Triumph: #{roll_triumph}".center(25 + dice_string.length) if roll_triumph > 0
-puts "Despair: #{roll_depsair}".center(25 + dice_string.length) if roll_despair > 0
+puts "Despair: #{roll_despair}".center(25 + dice_string.length) if roll_despair > 0
 p '+' * (25 + dice_string.length)
