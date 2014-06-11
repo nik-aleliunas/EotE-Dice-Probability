@@ -23,4 +23,4 @@ Command line Arguments:
     -D:/[BSADPC]*/ : Run time Dice Pool.
 
 Dice Roller:
-  A roller for the EotE dice. Input dice as you would for the Dice Probability, and it will give you a random roll of that pool.
+  A roller for the EotE dice. Input a dice pool string at either run time or when the script promts to, and it wil lreturn a random roll for that pool. Pools are of the form /[BSADPC]*/.
