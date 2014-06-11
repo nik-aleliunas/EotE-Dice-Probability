@@ -4,13 +4,13 @@
 
 # Dice symbol key:
 # (S)uccess, (A)dvantage, (F)ailure), (T)hreat, t(R)iumph, (D)espair
-boost = [nil, nil, 'S', 'SA', 'AA', 'A']
-setback = [nil, nil, 'F', 'F', 'T', 'T']
-ability = [nil, 'S', 'S', 'SS', 'A', 'A', 'SA', 'AA']
-difficulty = [nil, 'F', 'FF', 'T', 'T', 'T', 'TT', 'FT']
-proficiency = [nil, 'S', 'S', 'SS', 'SS', 'A', 'SA', 'SA', 'SA', 'AA', 'AA', 'SR']
-challenge = [nil, 'F', 'F', 'FF', 'FF', 'T', 'T', 'FT', 'FT', 'TT', 'TT', 'FD']
-expanded = false # Expanded output toggle
+boost =       [nil, nil, 'S',  'SA', 'AA', 'A']
+setback =     [nil, nil, 'F',  'F',  'T',  'T']
+ability =     [nil, 'S', 'S',  'SS', 'A',  'A', 'SA', 'AA']
+difficulty =  [nil, 'F', 'FF', 'T',  'T',  'T', 'TT', 'FT']
+proficiency = [nil, 'S', 'S',  'SS', 'SS', 'A', 'SA', 'SA', 'SA', 'AA', 'AA', 'SR']
+challenge =   [nil, 'F', 'F',  'FF', 'FF', 'T', 'T',  'FT', 'FT', 'TT', 'TT', 'FD']
+expanded = false # expanded output toggle
 combinations = false # Show all dice combinations Toggle
 dice_string = nil # Input String of dice pool. Should consist of BSADPC's.
 target_toggle = false # Target probability computation toggle
@@ -31,8 +31,11 @@ while ARGV.length > 0
       target_string = target_string[3..-1]
       p target_string
       target_toggle = true
+    else
+      puts "invalid runtime argument (-X, -C, -T:[/[ASTF]/] accepted)"
+      ARGV.shift
     end
-  else
+    else
     dice_string = ARGV.shift.upcase
   end
 end
@@ -45,14 +48,18 @@ end
 
 if target_toggle == true && (target_string.nil? || target_string == '')
   puts 'Target Success/Advantage: \
-  (Use S, A, F or T to signify each Success, Advantage, Failure or Threat.)'
+  (Use S or A to signify one Success or Advantage.)'
   STDOUT.flush
   target_string = gets.chomp.upcase
 end
 
+# Find the amount of Success/Failure needed for target
 if (target_toggle == true)
-  target_success   = target_string.count 'S'
-  target_advantage = target_string.count 'A'
+  target_success   = target_string.count('S') - target_string.count('F')
+  target_advantage = target_string.count('A') - target_string.count('T')
+  # organize the target string
+  target_string = target_success >= 0 ? ('S' * target_success) : ('F' * target_success.abs)
+  target_string += target_advantage >= 0 ? ('A' * target_advantage) : ('T' * target_advantage.abs)
 end
 
 # count the number of each type of die input
@@ -63,10 +70,12 @@ difficulty_num  = dice_string.count 'D'
 proficiency_num = dice_string.count 'P'
 challenge_num   = dice_string.count 'C'
 
-# Create the number of possibilities. (sides on die)^(# of dice)
-possibilities_max = 6**(boost_num + setback_num) * 8**(ability_num + difficulty_num) * 12**(proficiency_num + challenge_num)
+# Organize the dice_string
+dice_string = 'P' * proficiency_num + 'A' * ability_num + \
+'C' * challenge_num + 'D' * difficulty_num + \
+'B' * boost_num + 'S' * setback_num
 
-if (possibilities_max <= 1)
+if (dice_string.length < 1)
   p 'No Dice.'
   exit
 end
@@ -77,109 +86,218 @@ end
 # t(R)iumph and (D)espair are only counted for their successes.
 success_max = boost_num + 2 * (ability_num + proficiency_num)
 advantage_max =  2 * (boost_num + ability_num + proficiency_num)
-
 failure_max = setback_num + 2 * (difficulty_num + challenge_num)
 threat_max = setback_num + 2 * (difficulty_num + challenge_num)
 
 puts "Max Success: #{success_max}, Max Advantage: #{advantage_max}"
-
 puts "Max Failure: #{failure_max}, Max Threat: #{threat_max}"
+
 # create a result grid off those ranges.
 result_grid = Array.new(success_max + failure_max + 1) \
- { Array.new(advantage_max + threat_max + 1, 0.0) }
+{ Array.new(advantage_max + threat_max + 1, 0.0) }
 
-# create die grid
-die_grid = []
-
-# populate die grid with the input dice
-boost_num.times       { die_grid << boost       }
-setback_num.times     { die_grid << setback     }
-ability_num.times     { die_grid << ability     }
-difficulty_num.times  { die_grid << difficulty  }
-proficiency_num.times { die_grid << proficiency }
-challenge_num.times   { die_grid << challenge   }
-
-# iterate through all possible combinations of dice in grid
-# and add them to the result grid
-die_grid.shift.product(*die_grid) do |combi|
-  combi = combi.join
-  p combi if (combinations == true)
-  success_count = (combi.count 'S') - (combi.count 'F')
-  advantage_count = (combi.count 'A') - (combi.count 'T')
-  result_grid[success_count][advantage_count] += 1
+# Let's do some MAGIC!
+# create a new "die" from the dice that came before.
+# Then add the next die to that one.
+# At the end of the loop, you'll have 2 probability sets:
+# one for good dice, one for bad.
+success_temp, advantage_temp, failure_temp, threat_temp = 1,1,1,1
+bad_grid = Array.new(failure_temp) { Array.new(threat_temp, 1.0) }
+good_grid = Array.new(success_temp) { Array.new(advantage_temp, 1.0) }
+temp_die = []
+dice_string.each_char do |die|
+  case die
+  when 'B'
+    temp_die = boost
+    success_temp   += 1
+    advantage_temp += 2
+    possibilities = 6
+    temp_die_grid = Array.new(2) { Array.new(3,0.0) }
+  when 'S'
+    temp_die = setback
+    failure_temp   += 1
+    threat_temp  += 1
+    possibilities = 6
+    temp_die_grid = Array.new(2) { Array.new(2,0.0) }
+  when 'A'
+    temp_die = ability
+    success_temp   += 2
+    advantage_temp += 2
+    possibilities = 8
+  when 'D'
+    temp_die = difficulty
+    failure_temp   += 2
+    threat_temp  += 2
+    possibilities = 8
+  when 'P'
+    temp_die = proficiency
+    success_temp   += 2
+    advantage_temp += 2
+    possibilities = 12
+  when 'C'
+    temp_die = challenge
+    failure_temp   += 2
+    threat_temp  += 2
+    possibilities = 12
+  end
+  temp_die_grid = Array.new(3) { Array.new(3,0.0) } if /[^BS]/ === die
+  temp_die.each do |side|
+    success_count = side.nil? ? 0 : side.scan(/[SF]/).length
+    advantage_count = side.nil? ? 0 : side.scan(/[AT]/).length
+    temp_die_grid[success_count][advantage_count] += 1
+  end
+  
+  temp_die_grid.each { |x| x.collect! { |n| n / possibilities } }
+  
+  p success_temp
+  p advantage_temp
+  result_grid_temporary = /[BAP]/ === die ? \
+  Array.new(success_temp) { Array.new(advantage_temp, 0.0) } : \
+  Array.new(failure_temp) { Array.new(threat_temp,    0.0) }
+  
+  case die
+  when /[BAP]/
+    p good_grid.inspect
+    p temp_die_grid.inspect
+    good_grid.each_with_index do |grid_line, i|
+      grid_line.each_with_index do |grid_cell, j|
+        temp_die_grid.each_with_index do |temp_die_line, k|
+          temp_die_line.each_with_index do |temp_die_cell, l|
+            result_grid_temporary[i+k][j+l] += grid_cell * temp_die_cell
+          end
+        end
+      end
+    end
+    good_grid = result_grid_temporary
+  when /[SDC]/
+    bad_grid.each_with_index do |grid_line, i|
+      grid_line.each_with_index do |grid_cell, j|
+        temp_die_grid.each_with_index do |temp_die_line, k|
+          temp_die_line.each_with_index do |temp_die_cell, l|
+            result_grid_temporary[i+k][j+l] += grid_cell * temp_die_cell
+          end
+        end
+      end
+    end
+    bad_grid = result_grid_temporary
+  end
 end
 
+p good_grid.inspect
+p bad_grid.inspect
+
+good_grid.each_with_index do |good_line, i|
+    good_line.each_with_index do |good_cell, j|
+        bad_grid.each_with_index do |bad_line, k|
+            bad_line.each_with_index do |bad_cell, l|
+                result_grid[i-k][j-l] += bad_cell * good_cell
+            end
+        end
+    end
+end
+
+# For reference, some legacy Code, which is infinitely more memory intensive, but about 4 times smaller than the above
+#
+# create die grid
+#die_grid = []
+# populate die grid with the input dice
+#boost_num.times     { die_grid << boost     }
+#setback_num.times   { die_grid << setback   }
+#ability_num.times   { die_grid << ability   }
+#difficulty_num.times  { die_grid << difficulty  }
+#proficiency_num.times { die_grid << proficiency }
+#challenge_num.times   { die_grid << challenge   }
+
+## iterate through all possible combinations of dice in grid
+## and add them to the result grid
+#die_grid.shift.product(*die_grid) do |combi|
+#    combi = combi.join
+#    p combi if (combinations == true)
+#    success_count = (combi.count 'S') - (combi.count 'F')
+#    advantage_count = (combi.count 'A') - (combi.count 'T')
+#    result_grid[success_count][advantage_count] += 1
+#end
+#
+# End Legacy Code.
+
+result_grid.each { |x| x.collect! { |n| n * 100 } }
 # create percentile pools for
 # success rate, advantage rate, threat rate and target rate
 success_probability, advantage_probability, threat_probability, failure_symbol_probability, target_probability = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+
 puts "\n++++RESULTS for Dice Pool: #{dice_string}++++\n"
 puts '------------' if ( expanded == true)
+# Print out the Results (and at that same time grab the total probabilities)
 # Success
 result_grid[0..success_max].each_with_index do |result_line, i|
   # Advantage
   result_line[0..advantage_max].each_with_index do |result_cell, j|
     # Only show the results if there is a chance of it happening.
     if (result_cell != 0)
-      # Make the result into a percentage
-      result_cell /= (possibilities_max * 0.01)
       # if there is success, then add this percent to the growing success die percentage.
       success_probability += (i != 0) ? result_cell : 0
       # Likewise for advantage
       advantage_probability += (j != 0) ? result_cell : 0
-      target_probability += result_cell \
-      if target_toggle == true && i >= target_success && j >= target_advantage
+      target_probability += result_cell if (target_toggle == true && target_success >=0 && target_advantage >=0 && i >= target_success && j >= target_advantage)
       # Print the result
       puts "#{i} Success & #{j} Advantage: #{result_cell.round(2)}%" \
       if expanded == true
     end
   end
+  # Threat
   result_line.reverse[0..threat_max - 1].each_with_index do |result_cell, j|
     break if (threat_max == 0)
     if (result_cell != 0)
-      result_cell /= (possibilities_max * 0.01)
       success_probability += (i != 0) ? result_cell : 0
       # You can't get in here unless threat is generated
       # so all these add to threat probability.
       threat_probability += result_cell
+      target_probability += result_cell \
+      if target_toggle == true && target_success >=0 && target_advantage < 0 && \
+        i >= target_success && j + 1 >= target_advantage.abs
       puts "#{i} Success & #{j + 1} Threat: #{result_cell.round(2)}%" \
-      if expanded == true
+        if expanded == true
     end
   end
   puts '------------' if (expanded == true)
 end
-
+   
 # Failure
 result_grid.reverse[0..failure_max - 1].each_with_index do |result_line, i|
   break if failure_max == 0
   # Advantage
   result_line[0..advantage_max].each_with_index do |result_cell, j|
-    if (result_cell != 0)
-      result_cell /= (possibilities_max * 0.01)
-      # See Success and Advantage
-      advantage_probability += (j != 0) ? result_cell : 0
-      failure_symbol_probability += result_cell
+  if (result_cell != 0)
+    # See Success and Advantage
+    advantage_probability += (j != 0) ? result_cell : 0
+    failure_symbol_probability += result_cell
+    target_probability += result_cell \
+    if target_toggle == true && target_success < 0 && target_advantage >= 0 && \
+        i + 1 >= target_success.abs && j >= target_advantage
       puts "#{i + 1} Failure & #{j} Advantage: #{result_cell.round(2)}%" \
-      if expanded == true
+        if expanded == true
     end
   end
   # Threat
   result_line.reverse[0..threat_max - 1].each_with_index do |result_cell, j|
     break if threat_max == 0
     if (result_cell != 0)
-      result_cell /= (possibilities_max * 0.01)
       threat_probability += result_cell
       failure_symbol_probability += result_cell
+      target_probability += result_cell \
+        if target_toggle == true && target_success < 0 && target_advantage < 0 && \
+          i + 1 >= target_success.abs && j + 1 >= target_advantage.abs
       puts "#{i + 1} Failure & #{j + 1} Threat: #{result_cell.round(2)}%" \
       if expanded == true
     end
   end
   puts '------------' if (expanded == true)
 end
-
+    
 puts "Total Chance of Success: #{success_probability.round(2)}%"
 puts "Total Chance of Advantage: #{advantage_probability.round(2)}%"
 puts "Total Chance of Threat: #{threat_probability.round(2)}%"
-puts "Total Chance of a Failure Symbol: #{failure_symbol_probability.round(2)}%"
+puts "Total Chance of a seeing a Failure Symbol: #{failure_symbol_probability.round(2)}%"
 puts "Total Chance of Reaching Target (#{target_string}): #{target_probability.round(2)}%" if target_toggle == true
 puts "Total Triumph Chance: #{((1.0 - (11.0 / 12.0)**(proficiency_num)) * 100).round(2)}%" if proficiency_num > 0
 puts "Total Despair Chance: #{((1.0 - (11.0 / 12.0)**(challenge_num)) * 100).round(2)}%" if challenge_num > 0

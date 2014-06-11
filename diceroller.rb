@@ -55,7 +55,7 @@ proficiency_num.times { die_grid << proficiency }
 challenge_num.times   { die_grid << challenge   }
 
 die_grid.each do |die|
-  dice_roll += die[rand(die.length)].to_s
+  dice_roll += die.sample.to_s
 end
 
 roll_success = dice_roll.count('S') - dice_roll.count('F')
