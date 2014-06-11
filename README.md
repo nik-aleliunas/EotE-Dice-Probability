@@ -18,7 +18,7 @@ Just input any series of those letters, and the program will output the probabil
 
 Command line Arguments:
 
-    -S : Simplified. Show only the Total Probabilities
+    -X : eXpanded. Show the Total Probabilities
     -C : Combination. Show every single roll possibility.
     -T:[S,A,F,T] : Target. Input the target you want to hit (SST = 2 success, 1 Threat), and the program will tell you the probability of getting higher than that. If the area after -T is left blank, you may input your target during run time.
 

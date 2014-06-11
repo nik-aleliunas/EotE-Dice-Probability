@@ -10,7 +10,7 @@ ability = [nil, 'S', 'S', 'SS', 'A', 'A', 'SA', 'AA']
 difficulty = [nil, 'F', 'FF', 'T', 'T', 'T', 'TT', 'FT']
 proficiency = [nil, 'S', 'S', 'SS', 'SS', 'A', 'SA', 'SA', 'SA', 'AA', 'AA', 'SR']
 challenge = [nil, 'F', 'F', 'FF', 'FF', 'T', 'T', 'FT', 'FT', 'TT', 'TT', 'FD']
-simplified = false # Simplified output toggle
+expanded = false # Expanded output toggle
 combinations = false # Show all dice combinations Toggle
 dice_string = nil # Input String of dice pool. Should consist of BSADPC's.
 target_toggle = false # Target probability computation toggle
@@ -20,8 +20,8 @@ target_advantage = 0 # Numberical representation of Target String's Advantages
 
 while ARGV.length > 0
   if (ARGV[0][0] == '-')
-    if (ARGV[0][1] == 'S')
-      simplified = true
+    if (ARGV[0][1] == 'X')
+      expanded = true
       ARGV.shift
     elsif (ARGV[0][1] == 'C')
       combinations = true
@@ -113,7 +113,7 @@ end
 # success rate, advantage rate, threat rate and target rate
 success_probability, advantage_probability, threat_probability, failure_symbol_probability, target_probability = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 puts "\n++++RESULTS for Dice Pool: #{dice_string}++++\n"
-puts '------------' if ( simplified == false)
+puts '------------' if ( expanded == true)
 # Success
 result_grid[0..success_max].each_with_index do |result_line, i|
   # Advantage
@@ -130,7 +130,7 @@ result_grid[0..success_max].each_with_index do |result_line, i|
       if target_toggle == true && i >= target_success && j >= target_advantage
       # Print the result
       puts "#{i} Success & #{j} Advantage: #{result_cell.round(2)}%" \
-      if simplified == false
+      if expanded == true
     end
   end
   result_line.reverse[0..threat_max - 1].each_with_index do |result_cell, j|
@@ -142,10 +142,10 @@ result_grid[0..success_max].each_with_index do |result_line, i|
       # so all these add to threat probability.
       threat_probability += result_cell
       puts "#{i} Success & #{j + 1} Threat: #{result_cell.round(2)}%" \
-      if simplified == false
+      if expanded == true
     end
   end
-  puts '------------' if (simplified == false)
+  puts '------------' if (expanded == true)
 end
 
 # Failure
@@ -159,7 +159,7 @@ result_grid.reverse[0..failure_max - 1].each_with_index do |result_line, i|
       advantage_probability += (j != 0) ? result_cell : 0
       failure_symbol_probability += result_cell
       puts "#{i + 1} Failure & #{j} Advantage: #{result_cell.round(2)}%" \
-      if simplified == false
+      if expanded == true
     end
   end
   # Threat
@@ -170,16 +170,16 @@ result_grid.reverse[0..failure_max - 1].each_with_index do |result_line, i|
       threat_probability += result_cell
       failure_symbol_probability += result_cell
       puts "#{i + 1} Failure & #{j + 1} Threat: #{result_cell.round(2)}%" \
-      if simplified == false
+      if expanded == true
     end
   end
-  puts '------------' if (simplified == false)
+  puts '------------' if (expanded == true)
 end
 
 puts "Total Chance of Success: #{success_probability.round(2)}%"
 puts "Total Chance of Advantage: #{advantage_probability.round(2)}%"
 puts "Total Chance of Threat: #{threat_probability.round(2)}%"
-puts "Total Chance of a seeing a Failure Symbol: #{failure_symbol_probability.round(2)}%"
+puts "Total Chance of a Failure Symbol: #{failure_symbol_probability.round(2)}%"
 puts "Total Chance of Reaching Target (#{target_string}): #{target_probability.round(2)}%" if target_toggle == true
 puts "Total Triumph Chance: #{((1.0 - (11.0 / 12.0)**(proficiency_num)) * 100).round(2)}%" if proficiency_num > 0
 puts "Total Despair Chance: #{((1.0 - (11.0 / 12.0)**(challenge_num)) * 100).round(2)}%" if challenge_num > 0
