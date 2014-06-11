@@ -44,6 +44,7 @@ end
 
 # create die grid
 die_grid = []
+dice_roll = ''
 
 # populate die grid with the input dice
 boost_num.times       { die_grid << boost       }
@@ -53,7 +54,9 @@ difficulty_num.times  { die_grid << difficulty  }
 proficiency_num.times { die_grid << proficiency }
 challenge_num.times   { die_grid << challenge   }
 
-dice_roll = die_grid.shift.product(*die_grid)[rand(possibilities_max)].join()
+die_grid.each do |die|
+  dice_roll += die[rand(die.length)].to_s
+end
 
 roll_success = dice_roll.count('S') - dice_roll.count('F')
 roll_advantage = dice_roll.count('A') - dice_roll.count('T')
