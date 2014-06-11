@@ -2,6 +2,9 @@
 # Calculate the Probability of a given dice set
 # - Nik Aleliunas
 
+# Dice key:
+# (B)oost, (S)etback, (A)bility, (D)ifficulty, (P)roficiency, (C)hallenge
+
 # Dice symbol key:
 # (S)uccess, (A)dvantage, (F)ailure), (T)hreat, t(R)iumph, (D)espair
 boost =       [nil, nil, 'S',  'SA', 'AA', 'A']
@@ -29,27 +32,28 @@ while ARGV.length > 0
       combinations = true
       ARGV.shift
     elsif (ARGV[0][1] == 'T')
-      target_string = ARGV.shift
-      target_string = target_string[3..-1]
-      p target_string
+      target_string = ARGV.shift[3..-1]
       target_toggle = true
+    elsif (ARGV[0][1] == 'D')
+      dice_string = ARGV.shift[3..-1]
     else
-      puts "invalid runtime argument (-X, -C, -T:[/[ASTFRD]*/] accepted)"
+      puts "invalid runtime argument (-X, -C, -T:[/[ASTFRD]*/] -D:/[BSADPC]*/ accepted)"
       ARGV.shift
     end
-    else
-    dice_string = ARGV.shift.upcase
+  else
+    puts "Runtime arguments must start with -"
+    ARGV.shift
   end
 end
 
-if dice_string.nil?
-  puts 'Dice Pool: (Use the first letter to signify a die: B,S,A,D,P or C.)'
+if dice_string.nil? || dice_string == ''
+  puts 'Dice Pool Input: (Use /[BSADPC]*/ to signify (B)oost, (S)etback, (A)bility, (D)ifficulty, (P)roficiency, (C)hallenge)'
   STDOUT.flush
   dice_string = gets.chomp.upcase
 end
 
 if target_toggle == true && (target_string.nil? || target_string == '')
-  puts 'Target Success/Advantage: \
+  puts 'Target Input: \
   (Use /[ASTFRD]*/ to signify (S)uccesses, (F)ailures, (A)dvantages, (T)hreats, t(R)iumphs and (D)espairs.)'
   STDOUT.flush
   target_string = gets.chomp.upcase
