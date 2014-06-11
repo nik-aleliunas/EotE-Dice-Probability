@@ -92,6 +92,20 @@ threat_max = setback_num + 2 * (difficulty_num + challenge_num)
 puts "Max Success: #{success_max}, Max Advantage: #{advantage_max}"
 puts "Max Failure: #{failure_max}, Max Threat: #{threat_max}"
 
+#Combinations. Note that this is REALLY BLOODY SLOW.
+if combinations == true then
+    die_grid = []
+    #populate die grid with the input dice
+    boost_num.times     { die_grid << boost     }
+    setback_num.times   { die_grid << setback   }
+    ability_num.times   { die_grid << ability   }
+    difficulty_num.times  { die_grid << difficulty  }
+    proficiency_num.times { die_grid << proficiency }
+    challenge_num.times   { die_grid << challenge   }
+    
+    die_grid.shift.product(*die_grid) { |combi| p combi }
+end
+
 # create a result grid off those ranges.
 result_grid = Array.new(success_max + failure_max + 1) \
 { Array.new(advantage_max + threat_max + 1, 0.0) }
@@ -104,8 +118,9 @@ result_grid = Array.new(success_max + failure_max + 1) \
 success_temp, advantage_temp, failure_temp, threat_temp = 1,1,1,1
 bad_grid = Array.new(failure_temp) { Array.new(threat_temp, 1.0) }
 good_grid = Array.new(success_temp) { Array.new(advantage_temp, 1.0) }
-temp_die = []
+
 dice_string.each_char do |die|
+  temp_die = []
   case die
   when 'B'
     temp_die = boost
@@ -147,8 +162,10 @@ dice_string.each_char do |die|
     temp_die_grid[success_count][advantage_count] += 1
   end
   
+  #make the values of the temp die into probabilities.
   temp_die_grid.each { |x| x.collect! { |n| n / possibilities } }
   
+  #make a new grid based on the type of die the temp_die is, good or bad.
   result_grid_temporary = /[BAP]/ === die ? \
   Array.new(success_temp) { Array.new(advantage_temp, 0.0) } : \
   Array.new(failure_temp) { Array.new(threat_temp,    0.0) }
@@ -189,45 +206,8 @@ good_grid.each_with_index do |good_line, i|
     end
 end
 
-# For reference, some legacy Code, which is infinitely more memory intensive, but about 4 times smaller than the above
-#
-# create die grid
-#die_grid = []
-# populate die grid with the input dice
-#boost_num.times     { die_grid << boost     }
-#setback_num.times   { die_grid << setback   }
-#ability_num.times   { die_grid << ability   }
-#difficulty_num.times  { die_grid << difficulty  }
-#proficiency_num.times { die_grid << proficiency }
-#challenge_num.times   { die_grid << challenge   }
-
-## iterate through all possible combinations of dice in grid
-## and add them to the result grid
-#die_grid.shift.product(*die_grid) do |combi|
-#    combi = combi.join
-#    p combi if (combinations == true)
-#    success_count = (combi.count 'S') - (combi.count 'F')
-#    advantage_count = (combi.count 'A') - (combi.count 'T')
-#    result_grid[success_count][advantage_count] += 1
-#end
-#
-# End Legacy Code.
-
-if combinations == true then
-  die_grid = []
-  #populate die grid with the input dice
-  boost_num.times     { die_grid << boost     }
-  setback_num.times   { die_grid << setback   }
-  ability_num.times   { die_grid << ability   }
-  difficulty_num.times  { die_grid << difficulty  }
-  proficiency_num.times { die_grid << proficiency }
-  challenge_num.times   { die_grid << challenge   }
-  
-  die_grid.shift.product(*die_grid) { |combi| p combi }
-end
-
-
 result_grid.each { |x| x.collect! { |n| n * 100 } }
+
 # create percentile pools for
 # success rate, advantage rate, threat rate and target rate
 success_probability, advantage_probability, threat_probability, failure_symbol_probability, target_probability = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
@@ -245,7 +225,7 @@ result_grid[0..success_max].each_with_index do |result_line, i|
       success_probability += (i != 0) ? result_cell : 0
       # Likewise for advantage
       advantage_probability += (j != 0) ? result_cell : 0
-      target_probability += result_cell if (target_toggle == true && target_success >=0 && target_advantage >=0 && i >= target_success && j >= target_advantage)
+      target_probability += result_cell if (target_toggle == true && target_success >=0 && target_advantage >= 0 && i >= target_success && j >= target_advantage)
       # Print the result
       puts "#{i} Success & #{j} Advantage: #{result_cell.round(2)}%" \
       if expanded == true
@@ -260,7 +240,7 @@ result_grid[0..success_max].each_with_index do |result_line, i|
       # so all these add to threat probability.
       threat_probability += result_cell
       target_probability += result_cell \
-      if target_toggle == true && target_success >=0 && target_advantage < 0 && \
+      if target_toggle == true && target_success >=0 && target_advantage <= 0 && \
         i >= target_success && j + 1 >= target_advantage.abs
       puts "#{i} Success & #{j + 1} Threat: #{result_cell.round(2)}%" \
         if expanded == true
@@ -279,7 +259,7 @@ result_grid.reverse[0..failure_max - 1].each_with_index do |result_line, i|
     advantage_probability += (j != 0) ? result_cell : 0
     failure_symbol_probability += result_cell
     target_probability += result_cell \
-    if target_toggle == true && target_success < 0 && target_advantage >= 0 && \
+    if target_toggle == true && target_success <= 0 && target_advantage >= 0 && \
         i + 1 >= target_success.abs && j >= target_advantage
       puts "#{i + 1} Failure & #{j} Advantage: #{result_cell.round(2)}%" \
         if expanded == true
@@ -292,7 +272,7 @@ result_grid.reverse[0..failure_max - 1].each_with_index do |result_line, i|
       threat_probability += result_cell
       failure_symbol_probability += result_cell
       target_probability += result_cell \
-        if target_toggle == true && target_success < 0 && target_advantage < 0 && \
+        if target_toggle == true && target_success <= 0 && target_advantage <= 0 && \
           i + 1 >= target_success.abs && j + 1 >= target_advantage.abs
       puts "#{i + 1} Failure & #{j + 1} Threat: #{result_cell.round(2)}%" \
       if expanded == true
