@@ -20,7 +20,7 @@ Command line Arguments:
 
     -X : eXpanded. Show the Total Probabilities
     -C : Combination. Show every single roll possibility.
-    -T:[S,A,F,T] : Target. Input the target you want to hit (SST = 2 success, 1 Threat), and the program will tell you the probability of getting higher than that. If the area after -T is left blank, you may input your target during run time.
+    -T:/[SAFT]*/ : Target. Input the target you want to hit (SST = 2 success, 1 Threat), and the program will tell you the probability of getting higher than that. If the area after -T is left blank, you may input your target during run time.
 
 Dice Roller:
   A roller for the EotE dice. Input dice as you would for the Dice Probability, and it will give you a random roll of that pool.
