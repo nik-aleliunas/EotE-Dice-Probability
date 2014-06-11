@@ -88,17 +88,20 @@ success_max = boost_num + 2 * (ability_num + proficiency_num)
 advantage_max =  2 * (boost_num + ability_num + proficiency_num)
 failure_max = setback_num + 2 * (difficulty_num + challenge_num)
 threat_max = setback_num + 2 * (difficulty_num + challenge_num)
+triumph_max = proficiency_num
+despair_max = challenge_num
 
 puts "Max Success: #{success_max}, Max Advantage: #{advantage_max}"
 puts "Max Failure: #{failure_max}, Max Threat: #{threat_max}"
+puts "Max Triumph: #{triumph_max}, Max Despair: #{despair_max}"
 
 #Combinations. Note that this is REALLY BLOODY SLOW.
 if combinations == true then
     die_grid = []
     #populate die grid with the input dice
-    boost_num.times     { die_grid << boost     }
-    setback_num.times   { die_grid << setback   }
-    ability_num.times   { die_grid << ability   }
+    boost_num.times       { die_grid << boost     }
+    setback_num.times     { die_grid << setback   }
+    ability_num.times     { die_grid << ability   }
     difficulty_num.times  { die_grid << difficulty  }
     proficiency_num.times { die_grid << proficiency }
     challenge_num.times   { die_grid << challenge   }
