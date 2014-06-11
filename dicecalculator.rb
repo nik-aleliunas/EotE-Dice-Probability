@@ -4,12 +4,12 @@
 
 # Dice symbol key:
 # (S)uccess, (A)dvantage, (F)ailure), (T)hreat, t(R)iumph, (D)espair
-boost =       [nil, nil, 'S',  'SA', 'AA', 'A']
-setback =     [nil, nil, 'F',  'F',  'T',  'T']
-ability =     [nil, 'S', 'S',  'SS', 'A',  'A', 'SA', 'AA']
-difficulty =  [nil, 'F', 'FF', 'T',  'T',  'T', 'TT', 'FT']
-proficiency = [nil, 'S', 'S',  'SS', 'SS', 'A', 'SA', 'SA', 'SA', 'AA', 'AA', 'SR']
-challenge =   [nil, 'F', 'F',  'FF', 'FF', 'T', 'T',  'FT', 'FT', 'TT', 'TT', 'FD']
+boost = [nil, nil, 'S', 'SA', 'AA', 'A']
+setback = [nil, nil, 'F', 'F', 'T', 'T']
+ability = [nil, 'S', 'S', 'SS', 'A', 'A', 'SA', 'AA']
+difficulty = [nil, 'F', 'FF', 'T', 'T', 'T', 'TT', 'FT']
+proficiency = [nil, 'S', 'S', 'SS', 'SS', 'A', 'SA', 'SA', 'SA', 'AA', 'AA', 'SR']
+challenge = [nil, 'F', 'F', 'FF', 'FF', 'T', 'T', 'FT', 'FT', 'TT', 'TT', 'FD']
 simplified = false # Simplified output toggle
 combinations = false # Show all dice combinations Toggle
 dice_string = nil # Input String of dice pool. Should consist of BSADPC's.
@@ -45,18 +45,14 @@ end
 
 if target_toggle == true && (target_string.nil? || target_string == '')
   puts 'Target Success/Advantage: \
-  (Use S or A to signify one Success or Advantage.)'
+  (Use S, A, F or T to signify each Success, Advantage, Failure or Threat.)'
   STDOUT.flush
   target_string = gets.chomp.upcase
 end
 
-# Find the amount of Success/Failure needed for target
 if (target_toggle == true)
-  target_success   = target_string.count('S') - target_string.count('F')
-  target_advantage = target_string.count('A') - target_string.count('T')
-  # organize the target string
-  target_string = target_success >= 0 ? ('S' * target_success) : ('F' * target_success.abs)
-  target_string += target_advantage >= 0 ? ('A' * target_advantage) : ('T' * target_advantage.abs)
+  target_success   = target_string.count 'S'
+  target_advantage = target_string.count 'A'
 end
 
 # count the number of each type of die input
@@ -66,12 +62,6 @@ ability_num     = dice_string.count 'A'
 difficulty_num  = dice_string.count 'D'
 proficiency_num = dice_string.count 'P'
 challenge_num   = dice_string.count 'C'
-
-# Organize the dice_string
-dice_string = 'P' * proficiency_num + 'A' * ability_num + \
-'C' * challenge_num + 'D' * difficulty_num + \
-'B' * boost_num + 'S' * setback_num
-
 
 # Create the number of possibilities. (sides on die)^(# of dice)
 possibilities_max = 6**(boost_num + setback_num) * 8**(ability_num + difficulty_num) * 12**(proficiency_num + challenge_num)
@@ -87,18 +77,20 @@ end
 # t(R)iumph and (D)espair are only counted for their successes.
 success_max = boost_num + 2 * (ability_num + proficiency_num)
 advantage_max =  2 * (boost_num + ability_num + proficiency_num)
+
 failure_max = setback_num + 2 * (difficulty_num + challenge_num)
 threat_max = setback_num + 2 * (difficulty_num + challenge_num)
 
 puts "Max Success: #{success_max}, Max Advantage: #{advantage_max}"
-puts "Max Failure: #{failure_max}, Max Threat: #{threat_max}"
 
+puts "Max Failure: #{failure_max}, Max Threat: #{threat_max}"
 # create a result grid off those ranges.
 result_grid = Array.new(success_max + failure_max + 1) \
  { Array.new(advantage_max + threat_max + 1, 0.0) }
 
 # create die grid
 die_grid = []
+
 # populate die grid with the input dice
 boost_num.times       { die_grid << boost       }
 setback_num.times     { die_grid << setback     }
@@ -134,7 +126,8 @@ result_grid[0..success_max].each_with_index do |result_line, i|
       success_probability += (i != 0) ? result_cell : 0
       # Likewise for advantage
       advantage_probability += (j != 0) ? result_cell : 0
-      target_probability += result_cell if (target_toggle == true && target_success >=0 && target_advantage >=0 && i >= target_success && j >= target_advantage)
+      target_probability += result_cell \
+      if target_toggle == true && i >= target_success && j >= target_advantage
       # Print the result
       puts "#{i} Success & #{j} Advantage: #{result_cell.round(2)}%" \
       if simplified == false
@@ -148,9 +141,6 @@ result_grid[0..success_max].each_with_index do |result_line, i|
       # You can't get in here unless threat is generated
       # so all these add to threat probability.
       threat_probability += result_cell
-      target_probability += result_cell \
-      if target_toggle == true && target_success >=0 && target_advantage < 0 && \
-          i >= target_success && j + 1 >= target_advantage.abs
       puts "#{i} Success & #{j + 1} Threat: #{result_cell.round(2)}%" \
       if simplified == false
     end
@@ -168,9 +158,6 @@ result_grid.reverse[0..failure_max - 1].each_with_index do |result_line, i|
       # See Success and Advantage
       advantage_probability += (j != 0) ? result_cell : 0
       failure_symbol_probability += result_cell
-      target_probability += result_cell \
-      if target_toggle == true && target_success < 0 && target_advantage >= 0 && \
-          i + 1 >= target_success.abs && j >= target_advantage
       puts "#{i + 1} Failure & #{j} Advantage: #{result_cell.round(2)}%" \
       if simplified == false
     end
@@ -182,9 +169,6 @@ result_grid.reverse[0..failure_max - 1].each_with_index do |result_line, i|
       result_cell /= (possibilities_max * 0.01)
       threat_probability += result_cell
       failure_symbol_probability += result_cell
-      target_probability += result_cell \
-      if target_toggle == true && target_success < 0 && target_advantage < 0 && \
-          i + 1 >= target_success.abs && j + 1 >= target_advantage.abs
       puts "#{i + 1} Failure & #{j + 1} Threat: #{result_cell.round(2)}%" \
       if simplified == false
     end
