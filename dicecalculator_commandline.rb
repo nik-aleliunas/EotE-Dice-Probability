@@ -176,9 +176,11 @@ result_grid.reverse[0..failure_max - 1].each_with_index do |result_line, i|
   puts '------------' if (simplified == false)
 end
 
-puts "Total Chance of Success: #{success_probability}"
-puts "Total Chance of Advantage: #{advantage_probability}"
-puts "Total Chance of Threat: #{threat_probability}"
-puts "Total Chance of a seeing a Failure Symbol: #{failure_symbol_probability}"
-puts "Total Chance of Reaching Target (#{target_string}): #{target_probability}" if target_toggle == true
+puts "Total Chance of Success: #{success_probability.round(2)}%"
+puts "Total Chance of Advantage: #{advantage_probability.round(2)}%"
+puts "Total Chance of Threat: #{threat_probability.round(2)}%"
+puts "Total Chance of a seeing a Failure Symbol: #{failure_symbol_probability.round(2)}%"
+puts "Total Chance of Reaching Target (#{target_string}): #{target_probability.round(2)}%" if target_toggle == true
+puts "Total Triumph Chance: #{((1.0 - (11.0 / 12.0)**(proficiency_num)) * 100).round(2)}%" if proficiency_num > 0
+puts "Total Despair Chance: #{((1.0 - (11.0 / 12.0)**(challenge_num)) * 100).round(2)}%" if challenge_num > 0
 puts '+++++++++++++++'
