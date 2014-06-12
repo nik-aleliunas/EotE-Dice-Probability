@@ -23,6 +23,7 @@ Command line Arguments:
     -D:/[BSADPC]*/ : Run time Dice Pool.
 
 Dice Roller:
+<<<<<<< HEAD
   A roller for the EotE dice. Input dice as you would for the Dice Probability, and it will give you a random roll of that pool.
   
 Explanation of result grid:
@@ -32,3 +33,6 @@ Explanation of result grid:
  The 2nd Dimension works the same way for Advantage/Threat.
  The 3rd and 4th dimensions are normal, 0-Max for Triumph and Despair, respectively.
  Quite simple.
+=======
+  A roller for the EotE dice. Input a dice pool string at either run time or when the script promts to, and it wil lreturn a random roll for that pool. Pools are of the form /[BSADPC]*/.
+>>>>>>> FETCH_HEAD
