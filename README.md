@@ -30,8 +30,13 @@ Dice Roller:
 Explanation of result grid:
 ---------------------------
  The 1st Dimension is Success, Failure. [0-Max Success] here means that many successes.
+ 
  The other half of the 1st dimension is the amount of Failures, in such a way that the probability of the 1st failure is the last index in the array, such that: (Max Success + 1) Maps Yo (Max Failures) and (result_grid.max) Maps To (1 Failure)
+ 
  For example, for 4 successes, 2 failures, a row would look like this: [0S, 1S, 2S, 3S, 4S, 2F, 1F]
+ 
  The 2nd Dimension works the same way for Advantage/Threat.
+ 
  The 3rd and 4th dimensions are normal, 0-Max for Triumph and Despair, respectively.
+ 
  Quite simple.
