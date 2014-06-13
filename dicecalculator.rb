@@ -338,6 +338,7 @@ def group_target_calculation (result_grid, t_string = '', d_string)
   
   # calculate the minimum and maximum targets for each symbol. the difference will be the range of our array.
   # The minimum where to start on the result grid, the maximum will tell us where to stop.
+  # This is to compact the grid so we aren't iterating from 0-success_max, which is too much wasted effort and space.
   t_strings_array.each do |s|
     t_success_max   = s.count('S') > t_success_max   ? s.count('S') : t_success_max
     t_advantage_max = s.count('A') > t_advantage_max ? s.count('A') : t_advantage_max
@@ -347,12 +348,13 @@ def group_target_calculation (result_grid, t_string = '', d_string)
     t_triumph_min   = s.count('R') < t_triumph_min   ? s.count('R') : t_triumph_min
   end
   # Create a gird for the target sucess rates.
-  # For each Success Advantage Piar, tell how many Triumphs are needed.
-  # since the grid is uneven, put a filler value that will never be reached in all other cells.
   t_grid_x = t_success_max - t_success_min + 1
   t_grid_y = t_advantage_max - t_advantage_min + 1
   t_grid_z = t_triumph_max - t_triumph_min + 1
   t_grid = Array.new(t_grid_x) { Array.new(t_grid_y) { Array.new(t_grid_z, false) } }
+  
+  # For each Success, Advantage, Triump Triplet
+  # Make that cell of the target grid true.
   t_strings_array.each do |s|
     s_count  = s.count('S')
     a_count  = s.count('A')
@@ -360,12 +362,9 @@ def group_target_calculation (result_grid, t_string = '', d_string)
     t_grid[s_count - t_success_min][a_count - t_advantage_min][tr_count - t_triumph_min] = true
   end
   # And now, some shenanigans.
-  # At a specific S value, it has the lowest Advantage of it and all the S's after it
-  # So you can cut off all success advantage pairs that are larger than that, since they’ll be encompassed in it.
-  # We will be doing the 3d version of this with the triplet S,A,R.
-  # so if t_grid(0,1) = 0 then A) t_grid(0,1-max) = 0 & B) t_grid(0-max,1) = 0
-  # A is quite simple, and we'll use tr_cell_value for it.
-  # B is complex and needs an array, since Ruby doesn't have 2D array structure.
+  # Since a target is the lowest number of symbols needed
+  # make all the values after the target in a straight line true.
+  # So all SA is true if A is true, or SRR is true if SR is true.
   a_line_y = t_advantage_max - t_advantage_min + 1
   a_line_x = t_triumph_max - t_triumph_min + 1
 
@@ -382,8 +381,11 @@ def group_target_calculation (result_grid, t_string = '', d_string)
   end
   success_max, advantage_max, threat_max, failure_max, triumph_max, despair_max = dice_string_interpolation d_string
   target_probability = 0
+  #note we are starting iteraton at the target's minimum successes.
   result_grid[t_success_min..success_max].each_with_index do |result_success_line, i|
-    #Make sure that s_x remains in boundaries of t_grid. Everything past t_success_max is added to resulting probability
+    # Make sure that s_x remains in boundaries of t_grid.
+    # As above, in "Shenanigans", everything after a cell will be part of the solution if the preceeding one is.
+    # Since the target grid has a compacted range, everything past a maximum cell shares that cell's truth value.
     s_x = (i + t_success_min) < t_success_max ? i: t_success_max - t_success_min
     s_x = 0 if (t_success_max - t_success_min) == 0
 
