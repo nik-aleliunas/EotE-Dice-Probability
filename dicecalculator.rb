@@ -351,38 +351,36 @@ def group_target_calculation (result_grid, t_string = '', d_string)
   # since the grid is uneven, put a filler value that will never be reached in all other cells.
   t_grid_x = t_success_max - t_success_min + 1
   t_grid_y = t_advantage_max - t_advantage_min + 1
-  t_grid = Array.new(t_grid_x) { Array.new(t_grid_y, t_triumph_max + 1) }
+  t_grid_z = t_triumph_max - t_triumph_min + 1
+  t_grid = Array.new(t_grid_x) { Array.new(t_grid_y) { Array.new(t_grid_z, false) } }
   t_strings_array.each do |s|
-    s_count = s.count 'S'
-    a_count = s.count 'A'
-    tr_count = s.count 'R'
-    t_grid[s_count - t_success_min - 1][a_count - t_advantage_min - 1] = \
-    t_grid[s_count - t_success_min - 1][a_count - t_advantage_min - 1] < tr_count ? t_grid[s_count - t_success_min -1][a_count - t_advantage_min - 1] : tr_count
+    s_count  = s.count('S')
+    a_count  = s.count('A')
+    tr_count = s.count('R')
+    t_grid[s_count - t_success_min][a_count - t_advantage_min][tr_count - t_triumph_min] = true
   end
   # And now, some shenanigans.
   # At a specific S value, it has the lowest Advantage of it and all the S's after it
   # So you can cut off all success advantage pairs that are larger than that, since they’ll be encompassed in it.
   # We will be doing the 3d version of this with the triplet S,A,R.
   # so if t_grid(0,1) = 0 then A) t_grid(0,1-max) = 0 & B) t_grid(0-max,1) = 0
-  # A is quite simple.
+  # A is quite simple, and we'll use tr_cell_value for it.
   # B is complex and needs an array, since Ruby doesn't have 2D array structure.
-  line_m_x = t_advantage_max - t_advantage_min + 1
-  line_minimum = Array.new(line_m_x, t_triumph_max + 1)
-  
-  t_grid.each do |t_s_line|
-    cell_minimum = t_triumph_max + 1
-    t_s_line.each_with_index do |t_a_cell, i|
-      line_minimum[i] = line_minimum[i] < t_a_cell ? line_minimum[i] : t_a_cell
-      cell_minimum = cell_minimum < t_a_cell ? cell_minimum : t_a_cell
-      t_a_cell = cell_minimum < line_minimum[i] ? cell_minimum : line_minimum[i]
-    end
-    p "Line:"
-    p t_s_line.inspect
-    p cell_minimum
-  end
+  a_line_y = t_advantage_max - t_advantage_min + 1
+  a_line_x = t_triumph_max - t_triumph_min + 1
 
+  a_line_value = Array.new(a_line_x) { Array.new(a_line_x, false) }
+  t_grid.each_index do |i|
+    t_grid[i].each_index do |j|
+      t_grid[i][j].each_index do |k|
+        t_grid[i][j][k] = (t_grid[i][j][k - 1] || t_grid[i][j][k]) if( k > 0)
+        t_grid[i][j][k] = (t_grid[i][j - 1][k] || t_grid[i][j][k]) if( j > 0)
+        t_grid[i][j][k] = (t_grid[i - 1][j][k] || t_grid[i][j][k]) if( i > 0)
+
+      end
+    end
+  end
   success_max, advantage_max, threat_max, failure_max, triumph_max, despair_max = dice_string_interpolation d_string
-  p t_grid.inspect
   target_probability = 0
   result_grid[t_success_min..success_max].each_with_index do |result_success_line, i|
     #Make sure that s_x remains in boundaries of t_grid. Everything past t_success_max is added to resulting probability
@@ -392,8 +390,10 @@ def group_target_calculation (result_grid, t_string = '', d_string)
     result_success_line[t_advantage_min..advantage_max].each_with_index do |result_advantage_line, j|
       a_y = (j + t_advantage_min) < t_advantage_max ? j : t_advantage_max - t_advantage_min
       a_y = 0 if t_advantage_max - t_advantage_min == 0
-      next if (t_grid[s_x][a_y] == t_triumph_max + 1)
-      result_advantage_line[t_grid[s_x][a_y]..triumph_max].each do |result_triumph_line|
+      result_advantage_line[t_triumph_min..triumph_max].each_with_index do |result_triumph_line, k|
+        tr_z = (k + t_triumph_min) < t_triumph_max ? k : t_triumph_max - t_triumph_min
+        tr_z = 0 if t_triumph_max - t_triumph_min == 0
+        next if !(t_grid[s_x][a_y][tr_z])
         result_triumph_line[0..despair_max].each do |result_cell|
           #Success, Advantage Probability
           target_probability += result_cell
@@ -404,8 +404,10 @@ def group_target_calculation (result_grid, t_string = '', d_string)
     next if !(t_advantage_min == 0)
     result_success_line.reverse[0..threat_max - 1].each do |result_threat_line|
       break if (threat_max == 0)
-      next if (t_grid[s_x][0] == t_triumph_max + 1)
-      result_threat_line[t_grid[s_x][0] ..triumph_max].each do |result_triumph_line|
+      result_threat_line[t_triumph_min..triumph_max].each_with_index do |result_triumph_line, k|
+        tr_z = (k + t_triumph_min) < t_triumph_max ? k : t_triumph_max - t_triumph_min
+        tr_z = 0 if t_triumph_max - t_triumph_min == 0
+        next if !(t_grid[s_x][0][tr_z])
         result_triumph_line[0..despair_max].each do |result_cell|
           #Success, Threat Probability
           target_probability += result_cell
