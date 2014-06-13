@@ -17,6 +17,7 @@ $standard_round = 2
 expanded_toggle = false # expanded output toggle
 combinations_toggle = false # Show all dice combinations Toggle
 target_toggle = false # Target probability computation toggle
+group_target_toggle = false # Target probability computation toggle
 
 # Description : Create and populate a grid with the probabilities of this dice pool
 # Input :
@@ -323,6 +324,98 @@ def target_calculation (result_grid, target_string = '', dice_string)
   return target_probability
 end
 
+
+# Description: Calculates the probability of reaching/passing a certain group of targets, signified by target_string.
+# Inputs :
+# result_grid : stores all the probabilities of all the different possibilities. Failure and Threat start at negative indicies and count towards center.
+# t_string : string that represents the target success/failure threshhold
+# d_string : string that represents the dice pool. Required for splitting the result_grid into correct quadrants.
+# Output : Target Probability, as a percentage 0.0 - 100.0%
+# Note: Only works for "positive" values. Will try to generify it, but that might be an issue.
+def group_target_calculation (result_grid, t_string = '', d_string)
+  t_strings_array = t_string.split(".")
+  t_success_max, t_advantage_max, t_triumph_max, t_success_min, t_advantage_min, t_triumph_min = 0, 0, 0, 50, 50, 50
+  
+  # calculate the minimum and maximum targets for each symbol. the difference will be the range of our array.
+  # The minimum where to start on the result grid, the maximum will tell us where to stop.
+  t_strings_array.each do |s|
+    t_success_max   = s.count('S') > t_success_max   ? s.count('S') : t_success_max
+    t_advantage_max = s.count('A') > t_advantage_max ? s.count('A') : t_advantage_max
+    t_triumph_max   = s.count('R') > t_triumph_max   ? s.count('R') : t_triumph_max
+    t_success_min   = s.count('S') < t_success_min   ? s.count('S') : t_success_min
+    t_advantage_min = s.count('A') < t_advantage_min ? s.count('A') : t_advantage_min
+    t_triumph_min   = s.count('R') < t_triumph_min   ? s.count('R') : t_triumph_min
+  end
+  # Create a gird for the target sucess rates.
+  # For each Success Advantage Piar, tell how many Triumphs are needed.
+  # since the grid is uneven, put a filler value that will never be reached in all other cells.
+  t_grid_x = t_success_max - t_success_min + 1
+  t_grid_y = t_advantage_max - t_advantage_min + 1
+  t_grid = Array.new(t_grid_x) { Array.new(t_grid_y, t_triumph_max + 1) }
+  t_strings_array.each do |s|
+    s_count = s.count 'S'
+    a_count = s.count 'A'
+    tr_count = s.count 'R'
+    t_grid[s_count - t_success_min - 1][a_count - t_advantage_min - 1] = \
+    t_grid[s_count - t_success_min - 1][a_count - t_advantage_min - 1] < tr_count ? t_grid[s_count - t_success_min -1][a_count - t_advantage_min - 1] : tr_count
+  end
+  # And now, some shenanigans.
+  # At a specific S value, it has the lowest Advantage of it and all the S's after it
+  # So you can cut off all success advantage pairs that are larger than that, since they’ll be encompassed in it.
+  # We will be doing the 3d version of this with the triplet S,A,R.
+  # so if t_grid(0,1) = 0 then A) t_grid(0,1-max) = 0 & B) t_grid(0-max,1) = 0
+  # A is quite simple.
+  # B is complex and needs an array, since Ruby doesn't have 2D array structure.
+  line_m_x = t_advantage_max - t_advantage_min + 1
+  line_minimum = Array.new(line_m_x, t_triumph_max + 1)
+  
+  t_grid.each do |t_s_line|
+    cell_minimum = t_triumph_max + 1
+    t_s_line.each_with_index do |t_a_cell, i|
+      line_minimum[i] = line_minimum[i] < t_a_cell ? line_minimum[i] : t_a_cell
+      cell_minimum = cell_minimum < t_a_cell ? cell_minimum : t_a_cell
+      t_a_cell = cell_minimum < line_minimum[i] ? cell_minimum : line_minimum[i]
+    end
+    p "Line:"
+    p t_s_line.inspect
+    p cell_minimum
+  end
+
+  success_max, advantage_max, threat_max, failure_max, triumph_max, despair_max = dice_string_interpolation d_string
+  p t_grid.inspect
+  target_probability = 0
+  result_grid[t_success_min..success_max].each_with_index do |result_success_line, i|
+    #Make sure that s_x remains in boundaries of t_grid. Everything past t_success_max is added to resulting probability
+    s_x = (i + t_success_min) < t_success_max ? i: t_success_max - t_success_min
+    s_x = 0 if (t_success_max - t_success_min) == 0
+
+    result_success_line[t_advantage_min..advantage_max].each_with_index do |result_advantage_line, j|
+      a_y = (j + t_advantage_min) < t_advantage_max ? j : t_advantage_max - t_advantage_min
+      a_y = 0 if t_advantage_max - t_advantage_min == 0
+      next if (t_grid[s_x][a_y] == t_triumph_max + 1)
+      result_advantage_line[t_grid[s_x][a_y]..triumph_max].each do |result_triumph_line|
+        result_triumph_line[0..despair_max].each do |result_cell|
+          #Success, Advantage Probability
+          target_probability += result_cell
+        end
+      end
+    end
+    # Only go through the threat loop is there is a target that doesn't need advantage
+    next if !(t_advantage_min == 0)
+    result_success_line.reverse[0..threat_max - 1].each do |result_threat_line|
+      break if (threat_max == 0)
+      next if (t_grid[s_x][0] == t_triumph_max + 1)
+      result_threat_line[t_grid[s_x][0] ..triumph_max].each do |result_triumph_line|
+        result_triumph_line[0..despair_max].each do |result_cell|
+          #Success, Threat Probability
+          target_probability += result_cell
+        end
+      end
+    end
+  end
+  return target_probability
+end
+
 # +++++ SCRIPT START +++++
 # Why'd you add those methods, Nik?
 # Readability.
@@ -346,6 +439,9 @@ while ARGV.length > 0
     when 'R'
       rounding = ARGV.shift[3..-1]
       $standard_round = rounding.to_i if rounding.to_i > 0 && rounding.to_i < 10
+    when 'G'
+      group_target_string = ARGV.shift[3..-1]
+      group_target_toggle = true
     else
       puts 'invalid runtime argument (-X, -C, -R:/[0-9]+/ -T:[/[ASTFRD]*/] -D:/[BSADPC]*/ accepted)'
       ARGV.shift
@@ -397,37 +493,40 @@ success_max, advantage_max, threat_max, failure_max, triumph_max, despair_max = 
 puts "\n++++RESULTS for Dice Pool: #{dice_string}++++\n"
 puts '------------' if ( expanded_toggle == true)
 # Print out the Results (and at that same time grab the total probabilities)
-# Success
+# Success Loop
 result_grid[0..success_max].each_with_index do |result_success_line, i|
-  # Advantage
+  # Advantage Loop
   result_success_line[0..advantage_max].each_with_index do |result_advantage_line, j|
-    # Triumph
+    # Triumph Loop
     result_advantage_line[0..triumph_max].each_with_index do |result_triumph_line, k|
-      # Despair
+      # Despair Loop
       result_triumph_line[0..despair_max].each_with_index do |result_cell, l|
-        # Only print the results if there is a chance of it happening. a bit of speed up.
+        # Only add & print this value if there is a value to see.
+        # Don't want the output clogged with 0% statements.
         if (result_cell != 0)
-          # if there is success, then add this percent to the growing success die percentage.
+          # if there is success, then add this percent to the sucess probability.
           probability_array[0] += (i != 0) ? result_cell : 0
           # Likewise for advantage
           probability_array[1] += (j != 0) ? result_cell : 0
-          # Print the result
+          # Print the probability
           print_probability 'Success', 'Advantage', result_cell, i, j, k, l if expanded_toggle
         end
       end
     end
   end
-  # Threat
+  # Threat Loop
   result_success_line.reverse[0..threat_max - 1].each_with_index do |result_threat_line, j|
+    # Fence Posting, since each would run on [0..-1] if threat_max = 0,
+    # which is basically the whole array instead of none of it.
     break if threat_max == 0
-    # Triumph
+    # Triumph Loop
     result_threat_line[0..triumph_max].each_with_index do |result_triumph_line, k|
-      # Despair
+      # Despair Loop
       result_triumph_line[0..despair_max].each_with_index do |result_cell, l|
         if (result_cell != 0)
           probability_array[0] += (i != 0) ? result_cell : 0
           # You can't get in here unless threat is generated
-          # so all these add to threat probability.
+          # so add it to threat probability.
           probability_array[2] += result_cell
           print_probability 'Success', 'Threat', result_cell, i, j + 1, k, l if expanded_toggle
         end
@@ -437,30 +536,33 @@ result_grid[0..success_max].each_with_index do |result_success_line, i|
   puts '------------' if expanded_toggle
 end
    
-# Failure
+# Failure Loop
 result_grid.reverse[0..failure_max - 1].each_with_index do |result_line, i|
+  # Only continue this loop is failure was generated. Fence Posting, since each would run on [0..-1]
+  # which is basically the whole array instead of none of it
   break if failure_max == 0
-  # Advantage
+  # Advantage Loop
   result_line[0..advantage_max].each_with_index do |result_advantage_line, j|
-    # Triumph
+    # Triumph Loop
     result_advantage_line[0..triumph_max].each_with_index do |result_triumph_line, k|
-      # Despair
+      # Despair Loop
       result_triumph_line[0..despair_max].each_with_index do |result_cell, l|
         if (result_cell != 0)
           # See Success and Advantage
           probability_array[1] += (j != 0) ? result_cell : 0
+          # Same as threat: the only way into this loop is if a failure was generated.
           probability_array[3] += result_cell
           print_probability 'Failure', 'Advantage', result_cell, i + 1, j, k, l if expanded_toggle
         end
       end
     end
   end
-  # Threat
+  # Threat Loop
   result_line.reverse[0..threat_max - 1].each_with_index do |result_threat_line, j|
     break if threat_max == 0
-    # Triumph
+    # Triumph Loop
     result_threat_line[0..triumph_max].each_with_index do |result_triumph_line, k|
-      # Despair
+      # Despair Loop
       result_triumph_line[0..despair_max].each_with_index do |result_cell, l|
         if (result_cell != 0)
           probability_array[2] += result_cell
@@ -478,6 +580,7 @@ puts "Total Chance of Advantage: #{probability_array[1].round($standard_round)}%
 puts "Total Chance of Threat: #{probability_array[2].round($standard_round)}%"
 puts "Total Chance of Failure Symbol: #{probability_array[3].round($standard_round)}%"
 puts "Total Chance of Reaching Target (#{target_string}): #{(target_calculation result_grid, target_string, dice_string).round($standard_round)}%" if target_toggle == true
+puts "Total Chance of Reaching Group Target (#{group_target_string}): #{(group_target_calculation result_grid, group_target_string, dice_string).round($standard_round)}%" if group_target_toggle == true
 puts "Total Triumph Chance: #{((1.0 - (11.0 / 12.0)**(dice_string.count 'P')) * 100).round($standard_round)}%" if (dice_string.count 'P') > 0
 puts "Total Despair Chance: #{((1.0 - (11.0 / 12.0)**(dice_string.count 'C')) * 100).round($standard_round)}%" if (dice_string.count 'C') > 0
 puts '+++++++++++++++'
