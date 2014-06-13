@@ -104,19 +104,14 @@ def calculate_probability_grid (dice_string = 'B')
   result_grid = Array.new(success_max + failure_max + 1) \
   { Array.new(advantage_max + threat_max + 1) { Array.new(triumph_max + 1) { Array.new(despair_max + 1, 0.0) } } }
   
-  
-  good_grid.each_with_index do |good_grid_success_line, i|
-    good_grid_success_line.each_with_index do |good_grid_advantage_line, j|
-      good_grid_advantage_line.each_with_index do |good_grid_triumph_line, k|
-        good_grid_triumph_line.each_with_index do |good_grid_despair_cell, l|
-          bad_grid.each_with_index do |bad_grid_success_line, m|
-            bad_grid_success_line.each_with_index do |bad_grid_advantage_line, n|
-              bad_grid_advantage_line.each_with_index do |bad_grid_triumph_line, o|
-                bad_grid_triumph_line.each_with_index do |bad_grid_despair_cell, p|
-                  # i is successes, m is failures. That means the absolute value of a negative index is the failure index. Same with threat.
-                  result_grid[i - m][j - n][k + o][l + p] += good_grid_despair_cell * bad_grid_despair_cell
-                end
-              end
+  0.upto(success_temp - 1) do |i|
+    0.upto(advantage_temp - 1) do |j|
+      0.upto(triumph_temp - 1) do |k|
+        0.upto(failure_temp - 1) do |l|
+          0.upto(threat_temp - 1) do |m|
+            0.upto(despair_temp - 1) do |n|
+              # i is successes, m is failures. That means the absolute value of a negative index is the failure index. Same with threat.
+              result_grid[i - l][j - m][k][n] += good_grid[i][j][k][0] * bad_grid[l][m][n][0]
             end
           end
         end
@@ -179,16 +174,17 @@ def populate_probability_grid (grid1, grid2)
   
   #Make a grid that is large enoguh to fit grid1 x grid2
   result_grid = Array.new(x) { Array.new(y) { Array.new(z) { Array.new(w, 0.0) } } }
-  
-  grid1.each_with_index do |grid1_success_line, i|
-    grid1_success_line.each_with_index do |grid1_advantage_line, j|
-      grid1_advantage_line.each_with_index do |grid1_triumph_line, k|
-        grid1_triumph_line.each_with_index do |grid1_despair_cell, l|
-          grid2.each_with_index do |grid2_success_line, m|
-            grid2_success_line.each_with_index do |grid2_sadvantage_line, n|
-              grid2_sadvantage_line.each_with_index do |grid2_striumph_line, o|
-                grid2_striumph_line.each_with_index do |grid2_despair_cell, p|
-                  result_grid[i + m][j + n][k + o][l + p] += grid1_despair_cell * grid2_despair_cell
+  # populate!
+  # Is iterating over integers faster than over indexes? Probably!
+  0.upto(grid1.length - 1) do |i|
+    0.upto(grid1[0].length - 1) do |j|
+      0.upto(grid1[0][0].length - 1) do |k|
+        0.upto(grid1[0][0][0].length - 1) do |l|
+          0.upto(grid2.length - 1) do |m|
+            0.upto(grid2[0].length - 1) do |n|
+              0.upto(grid2[0][0].length - 1) do |o|
+                0.upto(grid2[0][0][0].length - 1) do |p|
+                  result_grid[i + m][j + n][k + o][l + p] += grid1[i][j][k][l] * grid2[m][n][o][p]
                 end
               end
             end
