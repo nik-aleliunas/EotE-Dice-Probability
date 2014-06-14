@@ -22,7 +22,7 @@ Command line Arguments:
     -C : Combination. Show every single roll possibility.
     -T:/[SAFTRD]*/ : Target. Input the target you want to hit (SST = 2 success, 1 Threat), and the program will tell you the probability of getting higher than that. If the area after -T is left blank, you may input your target during run time.
     -D:/[BSADPC]*/ : Run time Dice Pool.
-    -G:/[SAR]+(.[SAR]*)*/ : Group Target. Intput the target values you want to hit, delimited by periods, and the program will output the probability of getting higher than at least one of them.
+    -G:/[SAR]+(.[SAR]+)*/ : Group Target. Intput the target values you want to hit, delimited by periods, and the program will output the probability of getting higher than at least one of them.
 
 Dice Roller:
 ------------
