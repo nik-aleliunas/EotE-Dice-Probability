@@ -363,7 +363,6 @@ def group_target_calculation (result_grid, t_string = '', d_string)
   # So all SA is true if A is true, or SRR is true if SR is true.
   a_line_y = t_advantage_max - t_advantage_min + 1
   a_line_x = t_triumph_max - t_triumph_min + 1
-  p t_grid
   a_line_value = Array.new(a_line_x) { Array.new(a_line_x, false) }
   t_grid.each_index do |i|
     t_grid[i].each_index do |j|
@@ -375,7 +374,6 @@ def group_target_calculation (result_grid, t_string = '', d_string)
       end
     end
   end
-  p t_grid
   success_max, advantage_max, threat_max, failure_max, triumph_max, despair_max = dice_string_interpolation d_string
   target_probability = 0
   #note we are starting iteraton at the target's minimum successes.
@@ -416,7 +414,7 @@ def group_target_calculation (result_grid, t_string = '', d_string)
   end
   #Next, if there are targets with 0 successes, iterate throguh the failure portion of the grid
   if (t_success_min == 0 && failure_max != 0)
-    result_grid.reverse[0..failure_max - 1].each_with index do |result_failure_line, i|
+    result_grid.reverse[0..failure_max - 1].each_with_index do |result_failure_line, i|
       result_failure_line.each_with_index do |result_advantage_line, j|
         a_y = j < (t_advantage_max - t_advantage_min) ? j : t_advantage_max - t_advantage_min
         a_y = 0 if t_advantage_max - t_advantage_min == 0
