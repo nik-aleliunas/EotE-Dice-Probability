@@ -111,7 +111,7 @@ def calculate_probability_grid (dice_string = 'B')
           0.upto(threat_temp - 1) do |m|
             0.upto(despair_temp - 1) do |n|
               # i is successes, m is failures. That means the absolute value of a negative index is the failure index. Same with threat.
-              result_grid[i - l][j - m][k][n] += good_grid[i][j][k][0] * bad_grid[l][m][n][0]
+              result_grid[i - l][j - m][k][n] += good_grid[i][j][k][0] * bad_grid[l][m][0][n]
             end
           end
         end
